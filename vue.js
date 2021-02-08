@@ -6,7 +6,15 @@ const compileUtil = {
   },
 
   text(node, expr, vm) {
-    const value = this.getVal(expr, vm);
+    let value;
+    if (expr.indexOf('{{') !== -1) {
+      value = expr.replace(/\{\{(.+?)\}\}/g, (...args) => {
+        console.log(args)
+        return this.getVal(args[1], vm);
+      })
+    } else {
+      value = this.getVal(expr, vm);
+    }
     this.updater.textUpdater(node, value);
   },
   html(node, expr, vm) {
@@ -20,7 +28,8 @@ const compileUtil = {
 
   },
   on(node, expr, vm, eventName) {
-
+    const fn = vm.$options.methods && vm.$options.methods[expr];
+    node.addEventListener(eventName, fn.bind(vm), false)
   },
   updater: {
     textUpdater(node, value) {
@@ -78,12 +87,25 @@ class Compile {
         compileUtil[dirName] && compileUtil[dirName](node, value, this.vm, eventName);
         // 删除标签上的属性
         node.removeAttribute('v-'+ directive);
+      } else if (this.isEventName(name)) {
+        const [, eventName] = name.split('@');
+        compileUtil['on'](node, value, this.vm, eventName)
       }
     })
   }
   // 编译文本
   compileText(node) {
+    const content = node.textContent;
+    // 匹配{{xxx}}的内容
+    if (/\{\{(.+?)\}\}/.test(content)) {
+      // 处理文本节点
+      compileUtil['text'](node, content, this.vm)
+    }
+  }
 
+  // 是否是@click这样事件名字
+  isEventName(attrName){
+    return attrName.startsWith('@')
   }
 
   //判断是否是一个指令

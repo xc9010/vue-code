@@ -22,6 +22,7 @@
         <div v-html='htmlStr'></div>
         <div v-html='obj.fav'></div>
         <input type="text" v-model='msg'>
+        <button @click="handleClick">button</button>
     </div>
     <script src="vue.js"></script>
     <script>
@@ -36,7 +37,11 @@
                 msg: 'MVVM实现原理',
                 htmlStr:"<h3>hello MVVM</h3>",
             },
-
+            methods: {
+                handleClick() {
+                    console.log(this)
+                }
+            }
         })
     </script>
 </body>
