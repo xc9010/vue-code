@@ -1,3 +1,40 @@
+const compileUtil = {
+  getVal(expr, vm) {
+    return expr.split('.').reduce((data, cur) => {
+      return data[cur]
+    }, vm.$data)
+  },
+
+  text(node, expr, vm) {
+    const value = this.getVal(expr, vm);
+    this.updater.textUpdater(node, value);
+  },
+  html(node, expr, vm) {
+    const value = this.getVal(expr, vm);
+    this.updater.htmlUpdater(node, value);
+
+  },
+  model(node, expr, vm) {
+    const value = this.getVal(expr, vm);
+    this.updater.modelUpdater(node, value);
+
+  },
+  on(node, expr, vm, eventName) {
+
+  },
+  updater: {
+    textUpdater(node, value) {
+      node.textContent = value;
+    },
+    htmlUpdater(node, value) {
+      node.innerHTML = value;
+    },
+    modelUpdater(node, value) {
+      node.value = value;
+    }
+  }
+};
+
 class Compile {
   constructor(el, vm) {
     this.el = this.isElementNode(el) ? el : document.querySelector(el);
@@ -14,8 +51,6 @@ class Compile {
     // 1获取子节点
     const childNodes = fragment.childNodes;
     [...childNodes].forEach(child => {
-      console.log(child)
-
       if (this.isElementNode(child)) {
         // 元素节点
         this.compileElement(child)
@@ -32,11 +67,28 @@ class Compile {
 
   // 编译节点
   compileElement(node) {
-
+    const attr = node.attributes;
+    [...attr].forEach(v => {
+      const { name, value } = v;
+      if (this.isDirective(name)) {
+        // 忽略第一个v-,directive是model这些
+        const [, directive] = name.split('-');
+        // 继续分割on:click这些
+        const [dirName,eventName ] = directive.split(':');
+        compileUtil[dirName] && compileUtil[dirName](node, value, this.vm, eventName);
+        // 删除标签上的属性
+        node.removeAttribute('v-'+ directive);
+      }
+    })
   }
   // 编译文本
   compileText(node) {
 
+  }
+
+  //判断是否是一个指令
+  isDirective(attrName) {
+    return attrName.startsWith('v-')
   }
 
   isElementNode(node) {
