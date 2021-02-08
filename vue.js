@@ -1,12 +1,35 @@
-import { node } from "prop-types";
-
 class Compile{
     constructor(el, vm){
         this.el = this.isElementNode(el) ? el : document.querySelector(el);
         this.vm = vm;
+        // 1获取文档碎片对象，放入内存中减少性能消耗，回流重绘
+        const fragment = this.node2fragment(this.el)
+        // 2编译模板
+        this.compile(fragment)
+        // 3追加子元素到根元素
+        this.el.appendChild(fragment)
     }
-    isElementNode() {
+
+    compile(fragment) {
+        // 1获取子节点
+        const childNodes = fragment.childNodes;
+        [...childNodes].forEach(child => {
+            console.log(child)
+            
+        });
+    }
+
+    isElementNode(node) {
         return node.nodeType === 1;
+    }
+    node2fragment(el) {
+        // 创建文档碎片
+        const f = document.createDocumentFragment();
+        let firstChild;
+        while(firstChild = el.firstChild) {
+            f.appendChild(firstChild)
+        }
+        return f;
     }
 }
 
