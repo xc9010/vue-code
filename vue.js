@@ -9,7 +9,6 @@ const compileUtil = {
     let value;
     if (expr.indexOf('{{') !== -1) {
       value = expr.replace(/\{\{(.+?)\}\}/g, (...args) => {
-        console.log(args)
         return this.getVal(args[1], vm);
       })
     } else {
@@ -135,6 +134,7 @@ class MVue {
     this.$options = options;
     if (this.$el) {
       // 1实现一个数据观察者
+      new Observer(this.$data);
       // 2实现一个指令解析器
       new Compile(this.$el, this);
     }
