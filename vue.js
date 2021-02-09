@@ -11,6 +11,12 @@ const compileUtil = {
     })
   },
 
+  setVal(expr, vm, inputVal) {
+    return expr.split('.').reduce((data, cur) => {
+      data[cur] = inputVal
+    }, vm.$data)
+  },
+
   text(node, expr, vm) {
     let value;
     if (expr.indexOf('{{') !== -1) {
@@ -37,6 +43,9 @@ const compileUtil = {
     const value = this.getVal(expr, vm);
     new Watcher(vm, expr, (newVal) => {
       this.updater.modelUpdater(node, newVal)
+    });
+    node.addEventListener('input', (e) => {
+      this.setVal(expr, vm, e.target.value)
     });
     this.updater.modelUpdater(node, value);
 
@@ -152,6 +161,20 @@ class MVue {
       new Observer(this.$data);
       // 2实现一个指令解析器
       new Compile(this.$el, this);
+      // 代理$data
+      this.proxyData(this.$data);
+    }
+  }
+  proxyData(data) {
+    for(const key in data) {
+      Object.defineProperty(this, key, {
+        get() {
+          return data[key]
+        },
+        set(newVal) {
+          data[key] = newVal;
+        }
+      })
     }
   }
 }
